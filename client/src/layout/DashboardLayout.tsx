@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, Link, NavLink } from 'react-router-dom'
-import { AppBar, Toolbar, IconButton, Typography, Badge, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Divider, Tooltip } from '@mui/material'
+import { AppBar, Toolbar, IconButton, Typography, Badge, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Divider, Tooltip, Container, Stack, Avatar, InputBase, Paper } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import LogoutIcon from '@mui/icons-material/Logout'
@@ -14,6 +14,7 @@ import BusinessIcon from '@mui/icons-material/Business'
 import Brightness4Icon from '@mui/icons-material/Brightness4'
 import Brightness7Icon from '@mui/icons-material/Brightness7'
 import { useAuth } from '../state/AuthContext'
+import RightPanel from '../components/RightPanel'
 import { useUI } from '../state/UIContext'
 
 const drawerWidth = 260
@@ -49,15 +50,21 @@ export default function DashboardLayout() {
   )
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <AppBar position="fixed" color="inherit" sx={{ borderBottom: 1, borderColor: 'divider' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #f3e8ff 0%, #e0f2fe 100%)' }}>
+      <AppBar position="fixed" color="inherit" sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(8px)' }}>
         <Toolbar>
           <IconButton edge="start" color="inherit" aria-label="menu" onClick={() => setOpen(true)} sx={{ mr: 2, display: { md: 'none' } }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component={Link} to="/" sx={{ color: 'inherit', textDecoration: 'none', flexGrow: 1 }}>
-            Stocky
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={2} sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" noWrap component={Link} to="/" sx={{ color: 'inherit', textDecoration: 'none' }}>
+              Stocky
+            </Typography>
+            <Paper component="form" sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', px: 1.5, py: 0.5, borderRadius: 999, bgcolor: 'background.paper', minWidth: 260 }}>
+              <InputBase placeholder="Search" sx={{ ml: 1, flex: 1 }} />
+            </Paper>
+          </Stack>
+          <Avatar sx={{ width: 32, height: 32, mr: 1 }}>{state.user?.email?.[0]?.toUpperCase() || 'U'}</Avatar>
           <Tooltip title={darkMode ? 'Switch to light' : 'Switch to dark'}>
             <IconButton color="inherit" onClick={toggleDarkMode} aria-label="toggle theme" sx={{ mr: 1 }}>
               {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
@@ -119,9 +126,18 @@ export default function DashboardLayout() {
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, ml: { md: `${drawerWidth}px` } }}>
+      <Box component="main" sx={{ flexGrow: 1, ml: { md: `${drawerWidth}px` } }}>
         <Toolbar />
-        <Outlet />
+        <Container maxWidth="lg" sx={{ py: 3 }}>
+          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems="flex-start">
+            <Box sx={{ flexGrow: 1, width: '100%' }}>
+              <Outlet />
+            </Box>
+            <Box sx={{ width: { lg: 320 }, flexShrink: 0, display: { xs: 'none', lg: 'block' } }}>
+              <RightPanel />
+            </Box>
+          </Stack>
+        </Container>
       </Box>
     </Box>
   )

@@ -92,7 +92,7 @@ export default function CompanyDashboard() {
           <Button variant="outlined">New Store</Button>
         </Stack>
       </Stack>
-      <Tabs value={value} onChange={(_e, v) => setValue(v)} aria-label="company tabs" variant="scrollable" allowScrollButtonsMobile>
+      <Tabs value={value} onChange={(_e, v) => setValue(v)} aria-label="company tabs" variant="scrollable" allowScrollButtonsMobile sx={{ bgcolor: 'white', borderRadius: 2, px: 1 }}>
         <Tab label="Stores" id="tab-0" />
         <Tab label="Products" id="tab-1" />
         <Tab label="Deliveries" id="tab-2" />
@@ -101,19 +101,19 @@ export default function CompanyDashboard() {
       </Tabs>
 
       <TabPanel value={value} index={0}>
-        <Card><CardContent><Typography>Stores table (sortable, filterable)</Typography></CardContent></Card>
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}><CardContent><Typography>Stores table (sortable, filterable)</Typography></CardContent></Card>
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <Card><CardContent><Typography>Products table with stock and expiry</Typography></CardContent></Card>
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}><CardContent><Typography>Products table with stock and expiry</Typography></CardContent></Card>
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <Card><CardContent><Typography>Deliveries list and create modal</Typography></CardContent></Card>
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}><CardContent><Typography>Deliveries list and create modal</Typography></CardContent></Card>
       </TabPanel>
       <TabPanel value={value} index={3}>
-        <Card><CardContent><Typography>Shop access requests</Typography></CardContent></Card>
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}><CardContent><Typography>Shop access requests</Typography></CardContent></Card>
       </TabPanel>
       <TabPanel value={value} index={4}>
-        <Card><CardContent><Typography>Restock requests</Typography></CardContent></Card>
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}><CardContent><Typography>Restock requests</Typography></CardContent></Card>
       </TabPanel>
       <Dialog open={openProduct} onClose={() => setOpenProduct(false)}>
         <DialogTitle>New Product</DialogTitle>

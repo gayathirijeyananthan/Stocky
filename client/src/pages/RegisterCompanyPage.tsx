@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../state/AuthContext'
-import { getJson, postJson } from '../services/api'
+import { postJson } from '../services/api'
 
 export default function RegisterCompanyPage() {
   const { register } = useAuth()

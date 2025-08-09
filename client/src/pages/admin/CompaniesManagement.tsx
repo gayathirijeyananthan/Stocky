@@ -76,7 +76,7 @@ export default function CompaniesManagement() {
         </Stack>
       </Stack>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <Card>
+      <Card sx={{ borderRadius: 3 }}>
         <CardContent>
           {loading ? (
             <Box sx={{ display: 'grid', placeItems: 'center', height: 300 }}>
