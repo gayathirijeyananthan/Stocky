@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Box, Card, CardContent, Tab, Tabs, Typography, Button, Stack, Badge, Alert, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material'
 import { postJson } from '../../services/api'
 import { getJson } from '../../services/api'
@@ -24,6 +24,7 @@ export default function CompanyDashboard() {
   const { state } = useAuth()
   const token = state.accessToken
   const [approvalStatus, setApprovalStatus] = useState<'pending' | 'active' | 'unknown'>('unknown')
+  const approvalStatusRef = useRef<'pending' | 'active' | 'unknown'>(approvalStatus)
   const [loading, setLoading] = useState(true)
   const [openProduct, setOpenProduct] = useState(false)
   const [productForm, setProductForm] = useState({ name: '', SKU: '', price: '', warehouseStock: '' })
@@ -42,21 +43,27 @@ export default function CompanyDashboard() {
         )
         if (!mounted) return
         const newStatus: 'pending' | 'active' = res.company && res.company.status === 'active' ? 'active' : 'pending'
-        setApprovalStatus(newStatus)
+        if (approvalStatusRef.current !== newStatus) {
+          approvalStatusRef.current = newStatus
+          setApprovalStatus(newStatus)
+        }
         // Stop polling once approved
         if (newStatus === 'active' && interval != null) {
           clearInterval(interval)
           interval = undefined
         }
       } catch {
-        if (mounted) setApprovalStatus('pending')
+        if (mounted && approvalStatusRef.current !== 'pending') {
+          approvalStatusRef.current = 'pending'
+          setApprovalStatus('pending')
+        }
       } finally {
         if (mounted && showSpinner) setLoading(false)
       }
     }
 
-    // Initial fetch with spinner
-    void fetchCompany(true)
+    // Initial fetch with spinner only when status unknown (first mount)
+    void fetchCompany(approvalStatusRef.current === 'unknown')
     // Poll silently until approved
     interval = window.setInterval(() => void fetchCompany(false), 6000)
 
