@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import mongoose from 'mongoose'
 import { requireAuth, requireRoles } from '../middlewares/auth'
+import { Company } from '../models/Company'
 import { Product } from '../models/Product'
 
 const router = Router()
@@ -8,23 +9,33 @@ const router = Router()
 // POST /api/v1/products - create product (Company Admin)
 router.post('/', requireAuth, requireRoles('COMPANY_ADMIN'), async (req: Request, res: Response) => {
   try {
-    const { name, SKU, price, warehouseStock, expiryDate, imageUrl, companyId } = req.body as {
+    const { name, SKU, price, warehouseStock, expiryDate, imageUrl } = req.body as {
       name?: string
       SKU?: string
       price?: number
       warehouseStock?: number
       expiryDate?: string
       imageUrl?: string
-      companyId?: string
     }
 
     if (!name || !SKU || price == null || warehouseStock == null) {
       return res.status(400).json({ message: 'name, SKU, price, warehouseStock are required' })
     }
 
-    const resolvedCompanyId = companyId && mongoose.isValidObjectId(companyId) ? new mongoose.Types.ObjectId(companyId) : undefined
+    let companyObjectId: mongoose.Types.ObjectId | undefined
+    const userCompanyId = req.user?.companyId
+    if (userCompanyId && mongoose.isValidObjectId(userCompanyId)) {
+      companyObjectId = new mongoose.Types.ObjectId(userCompanyId)
+    } else {
+      const company = await Company.findOne({ createdByUserId: req.user!.sub, status: 'active' })
+      if (!company) {
+        return res.status(400).json({ message: 'No active company found for user' })
+      }
+      companyObjectId = company._id as mongoose.Types.ObjectId
+    }
+
     const doc = await Product.create({
-      companyId: resolvedCompanyId,
+      companyId: companyObjectId,
       name,
       SKU,
       price,
@@ -42,9 +53,21 @@ router.post('/', requireAuth, requireRoles('COMPANY_ADMIN'), async (req: Request
 })
 
 // GET /api/v1/products - list products (Company Admin)
-router.get('/', requireAuth, requireRoles('COMPANY_ADMIN'), async (_req: Request, res: Response) => {
+router.get('/', requireAuth, requireRoles('COMPANY_ADMIN'), async (req: Request, res: Response) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 })
+    let companyObjectId: mongoose.Types.ObjectId | undefined
+    const userCompanyId = req.user?.companyId
+    if (userCompanyId && mongoose.isValidObjectId(userCompanyId)) {
+      companyObjectId = new mongoose.Types.ObjectId(userCompanyId)
+    } else {
+      const company = await Company.findOne({ createdByUserId: req.user!.sub, status: 'active' })
+      if (!company) {
+        return res.status(400).json({ message: 'No active company found for user' })
+      }
+      companyObjectId = company._id as mongoose.Types.ObjectId
+    }
+
+    const products = await Product.find({ companyId: companyObjectId }).sort({ createdAt: -1 })
     return res.json({ products })
   } catch {
     return res.status(500).json({ message: 'Failed to fetch products' })

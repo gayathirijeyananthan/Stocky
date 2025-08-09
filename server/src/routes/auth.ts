@@ -63,8 +63,8 @@ router.post('/refresh', async (req: Request, res: Response) => {
     const accessToken = signAccessToken({
       sub: payload.sub,
       role: payload.role,
-      companyId: payload.companyId,
-      shopId: payload.shopId,
+      ...(payload.companyId ? { companyId: payload.companyId } : {}),
+      ...(payload.shopId ? { shopId: payload.shopId } : {}),
     })
     return res.json({ accessToken })
   } catch {
