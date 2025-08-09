@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Card, CardContent, Tab, Tabs, Typography, Button, Stack, Badge, Alert, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import { postJson } from '../../services/api'
 import { getJson } from '../../services/api'
 import { useAuth } from '../../state/AuthContext'
@@ -28,11 +29,14 @@ export default function CompanyDashboard() {
   const [loading, setLoading] = useState(true)
   const [openProduct, setOpenProduct] = useState(false)
   const [productForm, setProductForm] = useState({ name: '', SKU: '', price: '', warehouseStock: '' })
+  const [products, setProducts] = useState<Array<{ id: string; name: string; SKU: string; price: number; warehouseStock: number; expiryDate?: string; createdAt?: string }>>([])
+  const [productsLoading, setProductsLoading] = useState(false)
+  const [productsError, setProductsError] = useState<string | null>(null)
 
   useEffect(() => {
     let mounted = true
     let interval: number | undefined
-    let first = true
+    // track only via ref to avoid repeated renders
 
     async function fetchCompany(showSpinner: boolean) {
       try {
@@ -72,6 +76,40 @@ export default function CompanyDashboard() {
       if (interval != null) clearInterval(interval)
     }
   }, [token])
+
+  // Load products once company is active
+  useEffect(() => {
+    if (approvalStatus !== 'active' || !token) return
+    void loadProducts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [approvalStatus, token])
+
+  async function loadProducts() {
+    if (!token) return
+    try {
+      setProductsError(null)
+      setProductsLoading(true)
+      const res = await getJson<{ products: Array<{ _id: string; name: string; SKU: string; price: number; warehouseStock: number; expiryDate?: string; createdAt?: string }> }>(
+        '/products',
+        token
+      )
+      setProducts(
+        res.products.map((p) => ({
+          id: p._id,
+          name: p.name,
+          SKU: p.SKU,
+          price: p.price,
+          warehouseStock: p.warehouseStock,
+          expiryDate: p.expiryDate,
+          createdAt: p.createdAt,
+        }))
+      )
+    } catch (e: any) {
+      setProductsError(e?.message || 'Failed to load products')
+    } finally {
+      setProductsLoading(false)
+    }
+  }
   if (loading) {
     return (
       <Box sx={{ display: 'grid', placeItems: 'center', height: '50vh' }}>
@@ -120,7 +158,20 @@ export default function CompanyDashboard() {
         <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}><CardContent><Typography>Stores table (sortable, filterable)</Typography></CardContent></Card>
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}><CardContent><Typography>Products table with stock and expiry</Typography></CardContent></Card>
+        {productsError && <Alert severity="error" sx={{ mb: 2 }}>{productsError}</Alert>}
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}>
+          <CardContent>
+            <div style={{ height: 480, width: '100%' }}>
+              <DataGrid
+                rows={products}
+                loading={productsLoading}
+                columns={productColumns}
+                pageSizeOptions={[5, 10, 20]}
+                initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </TabPanel>
       <TabPanel value={value} index={2}>
         <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}><CardContent><Typography>Deliveries list and create modal</Typography></CardContent></Card>
@@ -151,6 +202,7 @@ export default function CompanyDashboard() {
               setOpenProduct(false)
               setProductForm({ name: '', SKU: '', price: '', warehouseStock: '' })
               setValue(1)
+              await loadProducts()
             } catch (e) {
               // could show snackbar
             }
@@ -171,5 +223,14 @@ async function createProduct(token: string | undefined, form: { name: string; SK
   }
   return postJson('/products', payload, token)
 }
+
+const productColumns: GridColDef[] = [
+  { field: 'name', headerName: 'Name', flex: 1, minWidth: 160 },
+  { field: 'SKU', headerName: 'SKU', width: 140 },
+  { field: 'price', headerName: 'Price', width: 120, valueFormatter: (p: any) => `$${Number((p?.value as number) ?? 0).toFixed(2)}` },
+  { field: 'warehouseStock', headerName: 'Stock', width: 120 },
+  { field: 'expiryDate', headerName: 'Expiry', width: 160, valueGetter: (p: any) => (p.row?.expiryDate ? new Date(p.row.expiryDate).toLocaleDateString() : '') },
+  { field: 'createdAt', headerName: 'Created', width: 180, valueGetter: (p: any) => (p.row?.createdAt ? new Date(p.row.createdAt).toLocaleString() : '') },
+]
 
 
