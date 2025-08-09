@@ -1,0 +1,23 @@
+{
+  "name": "stocky",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n server,client -c green,cyan \"npm --workspace server run dev\" \"npm --workspace client run dev\"",
+    "build": "npm --workspace server run build && npm --workspace client run build",
+    "start": "npm --workspace server run start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "MERN monorepo (server + client)",
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}
