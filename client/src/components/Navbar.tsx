@@ -1,5 +1,19 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../state/AuthContext'
+import type { Role } from '../services/api'
+
+function getDashboardPath(role: Role): string {
+  switch (role) {
+    case 'SUPER_ADMIN':
+      return '/admin'
+    case 'COMPANY_ADMIN':
+      return '/dashboard'
+    case 'SHOP_OWNER':
+      return '/shop'
+    default:
+      return '/'
+  }
+}
 
 export default function Navbar() {
   const { state, logout } = useAuth()
@@ -17,7 +31,10 @@ export default function Navbar() {
             )}
             {state.user && (
               <>
-                <li className="nav-item"><span className="nav-link disabled">{state.user.email}</span></li>
+                <li className="nav-item"><Link className="nav-link" to={getDashboardPath(state.user.role)}>Dashboard</Link></li>
+                {state.user.role === 'SHOP_OWNER' && (
+                  <li className="nav-item"><Link className="nav-link" to="/shop/cart">🛒 Cart</Link></li>
+                )}
                 <li className="nav-item"><button className="btn btn-outline-light btn-sm ms-2" onClick={logout}>Logout</button></li>
               </>
             )}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, Link, NavLink } from 'react-router-dom'
-import { AppBar, Toolbar, IconButton, Typography, Badge, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Divider, Tooltip, Container, Stack, Avatar, InputBase, Paper } from '@mui/material'
+import { AppBar, Toolbar, IconButton, Typography, Badge, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Divider, Tooltip, Container, Stack, Avatar } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import LogoutIcon from '@mui/icons-material/Logout'
@@ -13,25 +13,35 @@ import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck'
 import BusinessIcon from '@mui/icons-material/Business'
 import Brightness4Icon from '@mui/icons-material/Brightness4'
 import Brightness7Icon from '@mui/icons-material/Brightness7'
+import PersonIcon from '@mui/icons-material/Person'
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import { useAuth } from '../state/AuthContext'
 import RightPanel from '../components/RightPanel'
 import { useUI } from '../state/UIContext'
+import { useCart } from '../state/CartContext'
+import CartModal from '../components/CartModal'
 
 const drawerWidth = 260
+const sidebarGapPx = 3
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false)
   const { state, logout } = useAuth()
   const { notificationsCount, darkMode, toggleDarkMode } = useUI()
+  const { uniqueCount } = useCart()
+  const [cartOpen, setCartOpen] = useState(false)
 
   const role = state.user?.role
+  const shopStatus = state.user?.shopStatus
 
   const items = (
     role === 'SUPER_ADMIN'
       ? [
           { to: '/admin', icon: <DashboardIcon />, label: 'Overview' },
           { to: '/admin/companies', icon: <BusinessIcon />, label: 'Companies' },
+          { to: '/admin/shops', icon: <StoreIcon />, label: 'Shops' },
           { to: '/admin/users', icon: <AssignmentIndIcon />, label: 'Users' },
+          { to: '/profile', icon: <PersonIcon />, label: 'Profile' },
         ]
       : role === 'COMPANY_ADMIN'
       ? [
@@ -39,14 +49,24 @@ export default function DashboardLayout() {
           { to: '/stores', icon: <StoreIcon />, label: 'Stores' },
           { to: '/products', icon: <InventoryIcon />, label: 'Products' },
           { to: '/deliveries', icon: <LocalShippingIcon />, label: 'Deliveries' },
-          { to: '/requests', icon: <AssignmentIndIcon />, label: 'Shop Requests' },
+          { to: '/requests', icon: <AssignmentIndIcon />, label: 'Orders' },
           { to: '/restocks', icon: <PlaylistAddCheckIcon />, label: 'Restock Requests' },
+          { to: '/profile', icon: <PersonIcon />, label: 'Profile' },
         ]
-      : [
-          { to: '/shop', icon: <DashboardIcon />, label: 'My Dashboard' },
-          { to: '/shop/companies', icon: <BusinessIcon />, label: 'Companies' },
-          { to: '/shop/stock', icon: <InventoryIcon />, label: 'My Stock' },
-        ]
+      : (
+        shopStatus === 'active'
+          ? [
+              { to: '/shop', icon: <DashboardIcon />, label: 'My Dashboard' },
+              { to: '/shop/companies', icon: <BusinessIcon />, label: 'Companies' },
+              { to: '/shop/stock', icon: <InventoryIcon />, label: 'My Stock' },
+              { to: '/shop/orders', icon: <AssignmentIndIcon />, label: 'Orders' },
+              { to: '/profile', icon: <PersonIcon />, label: 'Profile' },
+            ]
+          : [
+              { to: '/shop/pending', icon: <DashboardIcon />, label: 'Awaiting Approval' },
+              { to: '/profile', icon: <PersonIcon />, label: 'Profile' },
+            ]
+      )
   )
 
   return (
@@ -60,9 +80,6 @@ export default function DashboardLayout() {
             <Typography variant="h6" noWrap component={Link} to="/" sx={{ color: 'inherit', textDecoration: 'none' }}>
               Stocky
             </Typography>
-            <Paper component="form" sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', px: 1.5, py: 0.5, borderRadius: 999, bgcolor: 'background.paper', minWidth: 260 }}>
-              <InputBase placeholder="Search" sx={{ ml: 1, flex: 1 }} />
-            </Paper>
           </Stack>
           <Avatar sx={{ width: 32, height: 32, mr: 1 }}>{state.user?.email?.[0]?.toUpperCase() || 'U'}</Avatar>
           <Tooltip title={darkMode ? 'Switch to light' : 'Switch to dark'}>
@@ -70,6 +87,15 @@ export default function DashboardLayout() {
               {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
             </IconButton>
           </Tooltip>
+          {role === 'SHOP_OWNER' && shopStatus === 'active' && (
+            <Tooltip title="Cart">
+              <IconButton onClick={() => setCartOpen(true)} color="inherit" aria-label="cart" sx={{ mr: 1 }}>
+                <Badge badgeContent={uniqueCount} color="error">
+                  <ShoppingCartIcon />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+          )}
           <IconButton color="inherit" aria-label="notifications">
             <Badge badgeContent={notificationsCount} color="error">
               <NotificationsIcon />
@@ -82,6 +108,7 @@ export default function DashboardLayout() {
           </Tooltip>
         </Toolbar>
       </AppBar>
+      <CartModal open={cartOpen} onClose={() => setCartOpen(false)} />
 
       {/* Permanent drawer on md+ */}
       <Drawer
@@ -97,7 +124,22 @@ export default function DashboardLayout() {
         <Divider />
         <List>
           {items.map((item) => (
-            <ListItemButton key={item.to} component={NavLink} to={item.to}>
+            <ListItemButton
+              key={item.to}
+              component={NavLink}
+              to={item.to}
+              sx={{
+                mx: 1,
+                my: 0.5,
+                borderRadius: 2,
+                '&.active': {
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  boxShadow: '0 6px 16px rgba(25,118,210,0.25)',
+                  '& .MuiListItemIcon-root, & .MuiListItemText-primary': { color: 'inherit' },
+                },
+              }}
+            >
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.label} />
             </ListItemButton>
@@ -117,7 +159,22 @@ export default function DashboardLayout() {
           <Divider />
           <List>
             {items.map((item) => (
-              <ListItemButton key={item.to} component={NavLink} to={item.to}>
+              <ListItemButton
+                key={item.to}
+                component={NavLink}
+                to={item.to}
+                sx={{
+                  mx: 1,
+                  my: 0.5,
+                  borderRadius: 2,
+                  '&.active': {
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    boxShadow: '0 6px 16px rgba(25,118,210,0.25)',
+                    '& .MuiListItemIcon-root, & .MuiListItemText-primary': { color: 'inherit' },
+                  },
+                }}
+              >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.label} />
               </ListItemButton>
@@ -126,10 +183,10 @@ export default function DashboardLayout() {
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, ml: { md: `${drawerWidth}px` } }}>
+      <Box component="main" sx={{ flexGrow: 1, ml: { md: `${drawerWidth + sidebarGapPx}px` } }}>
         <Toolbar />
-        <Container maxWidth="lg" sx={{ py: 3 }}>
-          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems="flex-start">
+        <Container maxWidth="xl" disableGutters sx={{ py: 2, pl: { md: `${sidebarGapPx}px` } }}>
+          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1.5} alignItems="flex-start">
             <Box sx={{ flexGrow: 1, width: '100%' }}>
               <Outlet />
             </Box>

@@ -27,3 +27,4 @@ export const Company: Model<CompanyDocument> =
   mongoose.models.Company || mongoose.model<CompanyDocument>('Company', companySchema)
 
 
+

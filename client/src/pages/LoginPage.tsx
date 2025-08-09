@@ -21,7 +21,7 @@ function LoginPage() {
       } else if (user.role === 'COMPANY_ADMIN') {
         navigate('/dashboard')
       } else {
-        navigate('/shop')
+        navigate(user.shopStatus === 'active' ? '/shop' : '/shop/pending')
       }
     } catch (err: any) {
       setError(err.message || 'Login failed')

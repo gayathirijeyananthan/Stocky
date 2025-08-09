@@ -8,6 +8,7 @@ export interface UserDocument extends Document {
   role: UserRole
   linkedCompanyId?: mongoose.Types.ObjectId
   linkedShopId?: mongoose.Types.ObjectId
+  shopStatus?: 'pending' | 'active' | 'inactive'
   createdAt: Date
   updatedAt: Date
 }
@@ -24,11 +25,13 @@ const userSchema = new Schema<UserDocument>(
     },
     linkedCompanyId: { type: Schema.Types.ObjectId, ref: 'Company' },
     linkedShopId: { type: Schema.Types.ObjectId, ref: 'Shop' },
+    shopStatus: { type: String, enum: ['pending', 'active', 'inactive'], index: true },
   },
   { timestamps: true }
 )
 
 export const User: Model<UserDocument> =
   mongoose.models.User || mongoose.model<UserDocument>('User', userSchema)
+
 
 

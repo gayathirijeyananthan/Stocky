@@ -7,7 +7,9 @@ import path from 'path';
 import fs from 'fs';
 import authRoutes from './routes/auth';
 import companyRoutes from './routes/companies';
+import shopRoutes from './routes/shops';
 import productRoutes from './routes/products';
+import orderRoutes from './routes/orders';
 
 dotenv.config();
 
@@ -28,7 +30,9 @@ app.use(cookieParser());
 // API routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/companies', companyRoutes);
+app.use('/api/v1/shops', shopRoutes);
 app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/orders', orderRoutes);
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {

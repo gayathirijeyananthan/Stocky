@@ -61,7 +61,7 @@ function LandingPage() {
                 <div className="col-8">
                   <h3 className="h5 mb-1">For Shops</h3>
                   <p className="subtle-muted mb-3">Request access to companies, track stock levels, and send smart restock requests.</p>
-                  <Link to="/register" className="btn btn-outline-dark">Join as a shop</Link>
+                  <Link to="/register/shop" className="btn btn-outline-dark">Join as a shop</Link>
                 </div>
                 <div className="col-4 text-end">
                   <img className="illustration img-fluid" src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop" alt="Shop shelves" />
