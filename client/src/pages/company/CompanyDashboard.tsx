@@ -30,30 +30,39 @@ export default function CompanyDashboard() {
 
   useEffect(() => {
     let mounted = true
-    async function fetchCompany() {
+    let interval: number | undefined
+    let first = true
+
+    async function fetchCompany(showSpinner: boolean) {
       try {
-        setLoading(true)
+        if (showSpinner) setLoading(true)
         const res = await getJson<{ company: { status: 'pending'|'active'|'inactive' } | null }>(
           '/companies/me',
           token
         )
         if (!mounted) return
-        if (!res.company) {
-          setApprovalStatus('pending')
-        } else {
-          setApprovalStatus(res.company.status === 'active' ? 'active' : 'pending')
+        const newStatus: 'pending' | 'active' = res.company && res.company.status === 'active' ? 'active' : 'pending'
+        setApprovalStatus(newStatus)
+        // Stop polling once approved
+        if (newStatus === 'active' && interval != null) {
+          clearInterval(interval)
+          interval = undefined
         }
       } catch {
         if (mounted) setApprovalStatus('pending')
       } finally {
-        if (mounted) setLoading(false)
+        if (mounted && showSpinner) setLoading(false)
       }
     }
-    fetchCompany()
-    const interval = setInterval(fetchCompany, 6000)
+
+    // Initial fetch with spinner
+    void fetchCompany(true)
+    // Poll silently until approved
+    interval = window.setInterval(() => void fetchCompany(false), 6000)
+
     return () => {
       mounted = false
-      clearInterval(interval)
+      if (interval != null) clearInterval(interval)
     }
   }, [token])
   if (loading) {
